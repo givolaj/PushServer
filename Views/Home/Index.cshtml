@@ -1,0 +1,126 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+
+<style>
+    input {
+        min-width: 100%;
+        margin-bottom: 15px;
+    }
+
+    button {
+        min-width: 100%;
+        padding: 12px !important;
+        font-size: 20px !important;
+        margin-top: 10px;
+    }
+</style>
+
+<h1>Push Server Test</h1>
+<hr />
+
+<label>api key (local)</label>
+<input id="apiKey" class="form-control" type="text" placeholder="paste api key here" />
+<label>server key (from firebase)</label>
+<input id="serverKey" class="form-control" type="text" placeholder="paste server key here" />
+<label>device token (from device)</label>
+<input id="deviceToken" class="form-control" type="text" placeholder="paste device token here" />
+<label>sender Id (from firebase)</label>
+<input id="senderId" class="form-control" type="text" placeholder="paste sender id here" />
+<label>message</label>
+<input id="message" class="form-control" type="text" placeholder="paste message here" />
+<label>data</label>
+<input id="data" class="form-control" type="text" placeholder="paste data here" />
+
+<button id="send" class="btn btn-primary">send push notification</button>
+<p id="response"></p>
+
+<br />
+<br />
+
+<h1>usage in apps:</h1>
+<pre>
+<code id="url"></code>
+you need to use a post request, like so:
+<code>
+            $.ajax({
+                url: 'push',
+                type: 'post',
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                data: JSON.stringify({
+                    serverKey: "a key",
+                    deviceToken: "a token",
+                    message: "blah blah",
+                    title: "test",
+                    apiKey: "the api key",
+                    senderId: "default sender id from firebase",
+                    data: "some data that we'll get with the message"
+                }),
+                success: function (data) {
+                    console.log(data);
+                    $("#response").text("done!");
+                },
+                error: function (err) {
+                    console.log(err.statusText);
+                    console.log(err);
+                }
+            });
+
+</code>
+the object i'm receiving is:
+<code>
+            public class PushRequest
+            {
+                public string apiKey { get; set; }
+                public string senderId { get; set; }
+                public string serverKey { get; set; }
+                public string deviceToken { get; set; }
+                public string title { get; set; }
+                public string message { get; set; }
+                public string data { get; set; }
+            }
+</code>
+    <code>
+            if message and title are empty or null, message will be delivered with 'data' only, so no default notification will show on android (and presumably on iOS too)
+</code>
+</pre>
+
+@section scripts{
+    <script>
+        $(document).ready(function () {
+            $("#send").click(function () {
+                $.ajax({
+                    url: pushUrl,
+                    type: 'post',
+                    contentType: 'application/json; charset=utf-8',
+                    dataType: 'json',
+                    data: JSON.stringify({
+                        serverKey: $("#serverKey").val(),
+                        deviceToken: $("#deviceToken").val(),
+                        message: $("#message").val(),
+                        title: "test",
+                        apiKey: $("#apiKey").val(),
+                        senderId: $("#senderId").val(),
+                        data: $("#data").val()
+                    }),
+                    success: function (data) {
+                        console.log(data);
+                        $("#response").text(data == "" ? "done!" : data);
+                    },
+                    error: function (err) {
+                        console.log(err.statusText);
+                        console.log(err);
+                    }
+                });
+            });
+
+            var pathArray = location.href.split('/');
+            var protocol = pathArray[0];
+            var host = pathArray[2];
+            var url = protocol + '//' + host;
+            var pushUrl = url + "/push";
+            $("#url").text('url: ' + pushUrl);
+        });
+    </script>
+}
